@@ -21,12 +21,50 @@ import {
   CheckCircle,
 } from 'lucide-react';
 
+interface AIActivity {
+  timeSlot?: string;
+  title: string;
+  description?: string;
+  transport?: string;
+  estimatedCost?: string;
+  foodHighlight?: string;
+}
+
+interface AIAccommodation {
+  name?: string;
+  type?: string;
+  estimatedCostPerNight?: string;
+  area?: string;
+}
+
 interface ItineraryDay {
   day: number;
+  date?: string;
   title: string;
-  activities: string[];
   description?: string;
+  accommodation?: AIAccommodation;
+  activities: AIActivity[];
+  dailyCostEstimate?: string;
   notes?: string;
+}
+
+interface EstimatedBudget {
+  total?: string;
+  perDay?: string;
+  perPersonPerDay?: string;
+  breakdown?: {
+    accommodation?: string;
+    food?: string;
+    activities?: string;
+    transport?: string;
+    miscellaneous?: string;
+  };
+}
+
+interface BestTime {
+  recommended?: string;
+  reason?: string;
+  avoid?: string;
 }
 
 interface Trip {
@@ -34,16 +72,15 @@ interface Trip {
   title: string;
   destination: string | { name?: string; city?: string; country?: string };
   summary?: string;
-  estimatedBudget?: string;
+  estimatedBudget?: EstimatedBudget;
   travelStyle?: string;
   interests?: string[];
   itinerary: ItineraryDay[];
-  bestTime?: string;
+  bestTime?: BestTime;
   packingTips?: string[];
-
   createdAt: string;
 
-  // Fallbacks
+  // Fallback user-input fields
   durationDays?: number;
   budget?: number;
   currency?: string;
@@ -104,7 +141,7 @@ export default function MyTripsPage() {
   };
 
   const getBudgetDisplay = (trip: Trip): string => {
-    if (trip.estimatedBudget) return trip.estimatedBudget;
+    if (trip.estimatedBudget?.total) return trip.estimatedBudget.total;
     if (trip.budget) return `${trip.currency || 'USD'} ${trip.budget}`;
     return 'N/A';
   };
@@ -296,20 +333,36 @@ export default function MyTripsPage() {
 
             {/* Grid Meta Information */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Budget */}
               <div className="p-4 rounded-xl bg-white/5 border border-white/5 flex items-start gap-3">
                 <TrendingUp className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                <div>
+                <div className="min-w-0">
                   <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Budget Details</div>
                   <div className="text-sm font-bold text-white mt-0.5">{getBudgetDisplay(selectedTrip)}</div>
+                  {selectedTrip.estimatedBudget?.perDay && (
+                    <div className="text-xs text-slate-400 mt-0.5">{selectedTrip.estimatedBudget.perDay}/day</div>
+                  )}
+                  {selectedTrip.estimatedBudget?.perPersonPerDay && (
+                    <div className="text-xs text-slate-400">{selectedTrip.estimatedBudget.perPersonPerDay}/person/day</div>
+                  )}
                 </div>
               </div>
 
+              {/* Best Time */}
               {selectedTrip.bestTime && (
                 <div className="p-4 rounded-xl bg-white/5 border border-white/5 flex items-start gap-3">
                   <CloudSun className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Best Time to Visit</div>
-                    <div className="text-sm font-bold text-white mt-0.5">{selectedTrip.bestTime}</div>
+                    <div className="text-sm font-bold text-white mt-0.5">
+                      {selectedTrip.bestTime.recommended || '—'}
+                    </div>
+                    {selectedTrip.bestTime.reason && (
+                      <div className="text-xs text-slate-400 mt-0.5 leading-snug line-clamp-2">{selectedTrip.bestTime.reason}</div>
+                    )}
+                    {selectedTrip.bestTime.avoid && (
+                      <div className="text-xs text-rose-400 mt-0.5">Avoid: {selectedTrip.bestTime.avoid}</div>
+                    )}
                   </div>
                 </div>
               )}
@@ -371,15 +424,49 @@ export default function MyTripsPage() {
 
                       <div className="space-y-3">
                         <h4 className="text-xs uppercase tracking-wider font-semibold text-slate-400">Activities</h4>
-                        <ul className="space-y-2.5">
+
+                        {/* Accommodation for the day */}
+                        {selectedTrip.itinerary.find((d) => d.day === activeDayTab)?.accommodation?.name && (
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-sky-500/5 border border-sky-500/20 text-xs text-sky-300">
+                            <span className="shrink-0">🏨</span>
+                            <div>
+                              <span className="font-semibold">{selectedTrip.itinerary.find((d) => d.day === activeDayTab)?.accommodation?.name}</span>
+                              {selectedTrip.itinerary.find((d) => d.day === activeDayTab)?.accommodation?.area && (
+                                <span className="text-slate-400"> &mdash; {selectedTrip.itinerary.find((d) => d.day === activeDayTab)?.accommodation?.area}</span>
+                              )}
+                              {selectedTrip.itinerary.find((d) => d.day === activeDayTab)?.accommodation?.estimatedCostPerNight && (
+                                <span className="text-emerald-400 ml-1">({selectedTrip.itinerary.find((d) => d.day === activeDayTab)?.accommodation?.estimatedCostPerNight})</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        <ul className="space-y-4">
                           {selectedTrip.itinerary
                             .find((d) => d.day === activeDayTab)
                             ?.activities.map((act, index) => (
                               <li key={index} className="flex gap-3 text-sm text-slate-300 items-start">
-                                <div className="w-5 h-5 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold text-violet-400">
+                                <div className="w-5 h-5 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center shrink-0 mt-1 text-[10px] font-bold text-violet-400">
                                   {index + 1}
                                 </div>
-                                <span className="leading-relaxed">{act}</span>
+                                <div className="flex-1 space-y-1">
+                                  {act.timeSlot && (
+                                    <div className="text-[10px] font-semibold text-violet-400 uppercase tracking-wider">{act.timeSlot}</div>
+                                  )}
+                                  <div className="font-semibold text-white leading-snug">{act.title}</div>
+                                  {act.description && (
+                                    <p className="text-xs text-slate-400 leading-relaxed">{act.description}</p>
+                                  )}
+                                  {act.transport && (
+                                    <div className="text-xs text-sky-400">🚌 {act.transport}</div>
+                                  )}
+                                  {act.foodHighlight && (
+                                    <div className="text-xs text-amber-400">🍽 {act.foodHighlight}</div>
+                                  )}
+                                  {act.estimatedCost && (
+                                    <div className="text-xs text-emerald-400">💰 {act.estimatedCost}</div>
+                                  )}
+                                </div>
                               </li>
                             ))}
                         </ul>

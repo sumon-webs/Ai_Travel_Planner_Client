@@ -38,19 +38,76 @@ import {
   TRANSPORTATION_OPTIONS,
 } from './tripFormSchema';
 
-// Define the shape of AI-generated travel plan
+// ── AI Response Types — must mirror the Gemini JSON schema ──
+
+interface AIActivity {
+  timeSlot?: string;
+  title: string;
+  description?: string;
+  transport?: string;
+  estimatedCost?: string;
+  foodHighlight?: string;
+}
+
+interface AIAccommodation {
+  name?: string;
+  type?: string;
+  estimatedCostPerNight?: string;
+  area?: string;
+}
+
 interface AIItineraryDay {
   day: number;
+  date?: string;
   title: string;
-  description: string;
-  activities: string[];
+  description?: string;
+  accommodation?: AIAccommodation;
+  activities: AIActivity[];
+  dailyCostEstimate?: string;
+  notes?: string;
+}
+
+interface AIEstimatedBudget {
+  total?: string;
+  perDay?: string;
+  perPersonPerDay?: string;
+  breakdown?: {
+    accommodation?: string;
+    food?: string;
+    activities?: string;
+    transport?: string;
+    miscellaneous?: string;
+  };
+}
+
+interface AIBestTime {
+  recommended?: string;
+  reason?: string;
+  avoid?: string;
+}
+
+interface AILocalFood {
+  name: string;
+  description?: string;
+  where?: string;
+  estimatedCostPerPerson?: string;
+}
+
+interface AITransportation {
+  arrival?: string;
+  localTransit?: string;
+  departure?: string;
+  tips?: string;
 }
 
 interface AITripResponse {
   title: string;
   summary: string;
-  estimatedBudget: string;
-  bestTime: string;
+  durationDays?: number;
+  estimatedBudget: AIEstimatedBudget;
+  bestTime: AIBestTime;
+  transportation?: AITransportation;
+  localFoods?: AILocalFood[];
   packingTips: string[];
   itinerary: AIItineraryDay[];
 }
@@ -324,29 +381,42 @@ export default function TripPlannerForm() {
 
         {/* Grid Meta Information */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Budget */}
           <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
             <TrendingUp className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-            <div>
+            <div className="min-w-0">
               <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Budget Details</div>
               <div className="text-sm font-bold text-white mt-0.5">
-                {formData?.currency} {formData?.budget}
+                {generatedItinerary.estimatedBudget?.total || `${formData?.currency} ${formData?.budget}`}
               </div>
-              <div className="text-xs text-slate-400 mt-1">{generatedItinerary.estimatedBudget}</div>
+              {generatedItinerary.estimatedBudget?.perDay && (
+                <div className="text-xs text-slate-400 mt-0.5">{generatedItinerary.estimatedBudget.perDay}/day</div>
+              )}
+              {generatedItinerary.estimatedBudget?.perPersonPerDay && (
+                <div className="text-xs text-slate-400">{generatedItinerary.estimatedBudget.perPersonPerDay}/person/day</div>
+              )}
             </div>
           </div>
 
+          {/* Best Time */}
           <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
             <CloudSun className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-            <div>
+            <div className="min-w-0">
               <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Best Time to Visit</div>
-              <div className="text-sm font-bold text-white mt-0.5">{generatedItinerary.bestTime}</div>
+              <div className="text-sm font-bold text-white mt-0.5">
+                {generatedItinerary.bestTime?.recommended || '—'}
+              </div>
+              {generatedItinerary.bestTime?.reason && (
+                <div className="text-xs text-slate-400 mt-0.5 leading-snug line-clamp-2">{generatedItinerary.bestTime.reason}</div>
+              )}
             </div>
           </div>
 
+          {/* Travelers */}
           <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
             <Users className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
             <div>
-              <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Travelers & Style</div>
+              <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Travelers &amp; Style</div>
               <div className="text-sm font-bold text-white mt-0.5">
                 {formData?.travelers} {formData?.travelers === 1 ? 'Traveler' : 'Travelers'}
               </div>
@@ -395,13 +465,30 @@ export default function TripPlannerForm() {
 
                 <div className="space-y-4">
                   <h4 className="text-xs uppercase tracking-wider font-semibold text-slate-400">Activities</h4>
-                  <ul className="space-y-3">
+                  <ul className="space-y-4">
                     {activeDayData.activities.map((act, index) => (
                       <li key={index} className="flex gap-3 text-sm text-slate-300 items-start">
-                        <div className="w-5 h-5 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold text-violet-400">
+                        <div className="w-5 h-5 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center shrink-0 mt-1 text-[10px] font-bold text-violet-400">
                           {index + 1}
                         </div>
-                        <span className="leading-relaxed">{act}</span>
+                        <div className="flex-1 space-y-1">
+                          {act.timeSlot && (
+                            <div className="text-[10px] font-semibold text-violet-400 uppercase tracking-wider">{act.timeSlot}</div>
+                          )}
+                          <div className="font-semibold text-white leading-snug">{act.title}</div>
+                          {act.description && (
+                            <p className="text-xs text-slate-400 leading-relaxed">{act.description}</p>
+                          )}
+                          {act.transport && (
+                            <div className="text-xs text-sky-400">🚌 {act.transport}</div>
+                          )}
+                          {act.foodHighlight && (
+                            <div className="text-xs text-amber-400">🍽 {act.foodHighlight}</div>
+                          )}
+                          {act.estimatedCost && (
+                            <div className="text-xs text-emerald-400">💰 {act.estimatedCost}</div>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>

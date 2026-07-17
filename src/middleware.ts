@@ -6,7 +6,7 @@ const PUBLIC_PATHS = ['/login', '/register'];
 
 // Paths that require authentication — extend this list as you add pages
 // Currently we protect everything except public paths and Next.js internals
-const PROTECTED_PREFIXES = ['/dashboard', '/profile', '/trips'];
+const PROTECTED_PREFIXES = ['/dashboard', '/profile', '/trips', '/items/add'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

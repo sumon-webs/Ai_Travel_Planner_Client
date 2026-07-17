@@ -19,8 +19,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface ItineraryDay {
   day: number;
   title: string;
-  activities: string[];
+  activities: { title: string; timeSlot?: string; description?: string; transport?: string; estimatedCost?: string; foodHighlight?: string }[];
   description?: string;
+  accommodation?: { name?: string; type?: string; estimatedCostPerNight?: string; area?: string };
+  dailyCostEstimate?: string;
   notes?: string;
 }
 
@@ -29,11 +31,11 @@ interface Trip {
   title: string;
   destination: string | { name?: string; city?: string; country?: string };
   summary?: string;
-  estimatedBudget?: string;
+  estimatedBudget?: { total?: string; perDay?: string; perPersonPerDay?: string; breakdown?: Record<string, string> };
   travelStyle?: string;
   interests?: string[];
   itinerary: ItineraryDay[];
-  bestTime?: string;
+  bestTime?: { recommended?: string; reason?: string; avoid?: string };
   packingTips?: string[];
 }
 
