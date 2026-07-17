@@ -5,12 +5,25 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from '@/lib/auth-client';
 import { Button } from '@heroui/react';
+import { ChevronDown, LayoutDashboard, MapPin, ListChecks, Settings, LogOut, Plus } from 'lucide-react';
 
-const NAV_LINKS = [
+const PUBLIC_NAV_LINKS = [
+  { label: 'Home', href: '/' },
+  { label: 'Explore', href: '/explore' },
+  { label: 'About', href: '/about' },
+];
+
+const AUTH_NAV_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'Explore', href: '/explore' },
   { label: 'Plan Trip', href: '/plan-trip' },
   { label: 'My Trips', href: '/trips' },
+];
+
+const DASHBOARD_ITEMS = [
+  { label: 'Add Destination', href: '/items/add', icon: Plus, description: 'Publish a new location' },
+  { label: 'Manage Destinations', href: '/items/manage', icon: ListChecks, description: 'Edit or remove your listings' },
+  { label: 'Profile', href: '/profile', icon: Settings, description: 'Account settings' },
 ];
 
 export default function Navbar() {
@@ -18,30 +31,28 @@ export default function Navbar() {
   const { data: session, isPending } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dashboardOpen, setDashboardOpen] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
 
-  // Detect scroll to add backdrop blur
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
+      if (dashboardRef.current && !dashboardRef.current.contains(e.target as Node)) {
+        setDashboardOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMenuOpen(false);
+    setDashboardOpen(false);
   }, [pathname]);
 
   const user = session?.user;
@@ -51,17 +62,19 @@ export default function Navbar() {
 
   const handleSignOut = async () => {
     await signOut();
-    setDropdownOpen(false);
+    setDashboardOpen(false);
   };
+
+  const navLinks = user ? AUTH_NAV_LINKS : PUBLIC_NAV_LINKS;
 
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 h-16 bg-[#0a0a14]/72 border-b border-transparent transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 h-16 bg-[#0a0a14]/80 border-b border-transparent transition-all duration-300 ${
           scrolled ? 'backdrop-blur-xl border-white/8 shadow-[0_4px_24px_rgba(0,0,0,0.35)]' : ''
         }`}
       >
-        <div className="max-w-[1200px] mx-auto h-full px-6 flex items-center gap-8">
+        <div className="max-w-[1280px] mx-auto h-full px-6 flex items-center gap-8">
           {/* ── Logo ── */}
           <Link href="/" className="flex items-center gap-2 no-underline shrink-0 group" aria-label="AI Travel Planner Home">
             <span className="text-[22px] animate-[logo-float_3s_ease-in-out_infinite]">✈️</span>
@@ -72,7 +85,7 @@ export default function Navbar() {
 
           {/* ── Desktop Nav Links ── */}
           <ul className="hidden md:flex items-center gap-1 list-none m-0 p-0 flex-1" role="list">
-            {NAV_LINKS.map(({ label, href }) => {
+            {navLinks.map(({ label, href }) => {
               const isActive = pathname === href;
               return (
                 <li key={href}>
@@ -84,7 +97,7 @@ export default function Navbar() {
                   >
                     {label}
                     {isActive && (
-                      <span className="w-1.25 h-1.25 rounded-full bg-violet-400 shadow-[0_0_6px_#a78bfa] animate-[dot-pop_0.3s_ease-out_both]" aria-hidden />
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shadow-[0_0_6px_#a78bfa]" aria-hidden />
                     )}
                   </Link>
                 </li>
@@ -97,75 +110,73 @@ export default function Navbar() {
             {isPending ? (
               <div className="w-9 h-9 rounded-full bg-white/10 animate-pulse" aria-hidden />
             ) : user ? (
-              /* ── Avatar + Custom Dropdown ── */
-              <div className="relative" ref={dropdownRef}>
+              /* ── Dashboard Dropdown ── */
+              <div className="relative" ref={dashboardRef}>
                 <button
-                  id="navbar-avatar-btn"
-                  className="relative w-[38px] h-[38px] rounded-full border-2 border-violet-500/60 bg-gradient-to-br from-[#4c1d95] to-[#1e1b4b] cursor-pointer overflow-hidden flex items-center justify-center transition-all hover:border-violet-500 hover:scale-105 hover:shadow-[0_0_0_3px_rgba(139,92,246,0.3)] focus:outline-none"
-                  onClick={() => setDropdownOpen((v) => !v)}
-                  aria-expanded={dropdownOpen}
+                  id="navbar-dashboard-btn"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-violet-500/40 transition-all cursor-pointer"
+                  onClick={() => setDashboardOpen((v) => !v)}
+                  aria-expanded={dashboardOpen}
                   aria-haspopup="true"
-                  aria-label="User menu"
-                  title={user.name ?? user.email}
                 >
-                  {user.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={user.image} alt={user.name ?? 'User'} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-[13px] font-bold text-white tracking-wide pointer-events-none">{initials}</span>
-                  )}
-                  <span className="absolute bottom-0.5 right-0.5 w-[9px] h-[9px] rounded-full bg-green-500 border-2 border-[#0a0a14]" aria-hidden />
+                  {/* Avatar */}
+                  <div className="w-7 h-7 rounded-full border border-violet-500/60 bg-gradient-to-br from-[#4c1d95] to-[#1e1b4b] overflow-hidden flex items-center justify-center shrink-0">
+                    {user.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={user.image} alt={user.name ?? 'User'} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[11px] font-bold text-white">{initials}</span>
+                    )}
+                  </div>
+                  <div className="hidden md:flex items-center gap-1.5">
+                    <LayoutDashboard className="w-3.5 h-3.5 text-violet-400" />
+                    <span className="text-[14px] font-medium text-white/90">Dashboard</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-white/50 transition-transform duration-200 ${dashboardOpen ? 'rotate-180' : ''}`} />
+                  </div>
                 </button>
 
-                {/* Custom dropdown panel */}
-                {dropdownOpen && (
+                {/* Dashboard Dropdown Panel */}
+                {dashboardOpen && (
                   <div
-                    className="absolute right-0 top-[calc(100%+8px)] w-56 z-50 bg-[#0f0c29]/96 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.5)] overflow-hidden animate-[slide-down_0.2s_ease-out_both]"
+                    className="absolute right-0 top-[calc(100%+8px)] w-64 z-50 bg-[#0f0c29]/96 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.6)] overflow-hidden animate-[slide-down_0.2s_ease-out_both]"
                     role="menu"
-                    aria-label="User actions"
                   >
-                    {/* Profile header */}
+                    {/* Profile Header */}
                     <div className="px-4 py-3.5 border-b border-white/8">
                       <p className="font-semibold text-[14px] text-white truncate">{user.name ?? 'Traveler'}</p>
                       <p className="text-[12px] text-white/50 truncate">{user.email}</p>
                     </div>
 
-                    {/* Menu items */}
+                    {/* Dashboard Menu Items */}
                     <div className="py-1.5">
-                      <Link
-                        href="/trips"
-                        role="menuitem"
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-[14px] text-white/80 hover:text-white hover:bg-white/6 transition-colors no-underline"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <span>🗺️</span> My Trips
-                      </Link>
-                      <Link
-                        href="/favorites"
-                        role="menuitem"
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-[14px] text-white/80 hover:text-white hover:bg-white/6 transition-colors no-underline"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <span>❤️</span> Favorites
-                      </Link>
-                      <Link
-                        href="/profile"
-                        role="menuitem"
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-[14px] text-white/80 hover:text-white hover:bg-white/6 transition-colors no-underline border-b border-white/8"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <span>⚙️</span> Settings
-                      </Link>
+                      {DASHBOARD_ITEMS.map(({ label, href, icon: Icon, description }) => (
+                        <Link
+                          key={href}
+                          href={href}
+                          role="menuitem"
+                          className="flex items-start gap-3 px-4 py-2.5 hover:bg-white/6 transition-colors no-underline group"
+                          onClick={() => setDashboardOpen(false)}
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-violet-500/25 transition-colors">
+                            <Icon className="w-3.5 h-3.5 text-violet-400" />
+                          </div>
+                          <div>
+                            <p className="text-[13px] font-medium text-white/90">{label}</p>
+                            <p className="text-[11px] text-white/40">{description}</p>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
 
-                    {/* Sign out */}
-                    <div className="py-1.5">
+                    {/* Sign Out */}
+                    <div className="border-t border-white/8 py-1.5">
                       <button
                         role="menuitem"
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[14px] text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-left cursor-pointer"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-left cursor-pointer"
                         onClick={handleSignOut}
                       >
-                        <span>🚪</span> Sign Out
+                        <LogOut className="w-3.5 h-3.5" />
+                        Sign Out
                       </button>
                     </div>
                   </div>
@@ -184,7 +195,7 @@ export default function Navbar() {
                 </Link>
                 <Link href="/register">
                   <Button
-                    className="px-4 py-1.5 h-auto min-w-0 rounded-lg text-[14px] font-semibold text-white bg-gradient-to-br from-violet-600 to-indigo-600 shadow-[0_2px_12px_rgba(139,92,246,0.4)] hover:opacity-90 hover:scale-[1.01] hover:shadow-[0_4px_18px_rgba(139,92,246,0.55)] transition-all cursor-pointer"
+                    className="px-4 py-1.5 h-auto min-w-0 rounded-lg text-[14px] font-semibold text-white bg-gradient-to-br from-violet-600 to-indigo-600 shadow-[0_2px_12px_rgba(139,92,246,0.4)] hover:opacity-90 hover:scale-[1.01] transition-all cursor-pointer"
                   >
                     Get Started
                   </Button>
@@ -195,13 +206,13 @@ export default function Navbar() {
             {/* ── Mobile Hamburger ── */}
             <button
               id="navbar-menu-toggle"
-              className="flex md:hidden flex-col justify-center gap-1.25 w-9 h-9 p-1.5 bg-white/6 border border-white/10 rounded-lg cursor-pointer transition-colors hover:bg-white/12"
+              className="flex md:hidden flex-col justify-center gap-1.5 w-9 h-9 p-1.5 bg-white/6 border border-white/10 rounded-lg cursor-pointer transition-colors hover:bg-white/12"
               onClick={() => setMenuOpen((v) => !v)}
               aria-expanded={menuOpen}
               aria-label="Toggle navigation menu"
             >
               <span className={`block h-[2px] w-full bg-white rounded-sm transition-transform duration-300 origin-center ${menuOpen ? 'translate-y-[7px] rotate-45' : ''}`} />
-              <span className={`block h-[2px] w-full bg-white rounded-sm transition-all duration-300 origin-center ${menuOpen ? 'opacity-0 scale-x-0' : ''}`} />
+              <span className={`block h-[2px] w-full bg-white rounded-sm transition-all duration-300 ${menuOpen ? 'opacity-0 scale-x-0' : ''}`} />
               <span className={`block h-[2px] w-full bg-white rounded-sm transition-transform duration-300 origin-center ${menuOpen ? '-translate-y-[7px] -rotate-45' : ''}`} />
             </button>
           </div>
@@ -209,9 +220,9 @@ export default function Navbar() {
 
         {/* ── Mobile Drawer ── */}
         {menuOpen && (
-          <div className="absolute top-full left-0 right-0 z-40 bg-[#0a081e]/97 backdrop-blur-xl border-t border-white/7 p-4 md:hidden animate-[slide-down_0.25s_ease-out_both]" role="navigation" aria-label="Mobile navigation">
+          <div className="absolute top-full left-0 right-0 z-40 bg-[#0a081e]/97 backdrop-blur-xl border-t border-white/7 p-4 md:hidden" role="navigation" aria-label="Mobile navigation">
             <ul className="flex flex-col gap-1 list-none m-0 p-0" role="list">
-              {NAV_LINKS.map(({ label, href }) => {
+              {navLinks.map(({ label, href }) => {
                 const isActive = pathname === href;
                 return (
                   <li key={href}>
@@ -227,20 +238,37 @@ export default function Navbar() {
                 );
               })}
             </ul>
-            {!user && !isPending && (
+
+            {user ? (
+              <div className="mt-4 pt-4 border-t border-white/7 flex flex-col gap-1">
+                <p className="text-xs text-white/40 px-4 uppercase tracking-wider font-semibold mb-1">Dashboard</p>
+                {DASHBOARD_ITEMS.map(({ label, href, icon: Icon }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[15px] text-white/80 hover:bg-white/7 hover:text-white no-underline transition-colors"
+                  >
+                    <Icon className="w-4 h-4 text-violet-400 shrink-0" />
+                    {label}
+                  </Link>
+                ))}
+                <button
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[15px] text-red-400 hover:bg-red-500/10 transition-colors text-left cursor-pointer mt-1"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="w-4 h-4 shrink-0" />
+                  Sign Out
+                </button>
+              </div>
+            ) : (
               <div className="flex flex-col gap-2.5 mt-4 pt-4 border-t border-white/7">
                 <Link href="/login" className="block">
-                  <Button
-                    variant="outline"
-                    className="w-full py-2.5 rounded-lg text-[16px] font-medium text-white/80 border-white/15 hover:bg-white/8 hover:text-white transition-all cursor-pointer"
-                  >
+                  <Button variant="outline" className="w-full py-2.5 rounded-lg text-[16px] font-medium text-white/80 border-white/15 hover:bg-white/8 hover:text-white transition-all cursor-pointer">
                     Sign In
                   </Button>
                 </Link>
                 <Link href="/register" className="block">
-                  <Button
-                    className="w-full py-2.5 rounded-lg text-[16px] font-semibold text-white bg-gradient-to-br from-violet-600 to-indigo-600 shadow-[0_2px_12px_rgba(139,92,246,0.4)] hover:opacity-90 transition-all cursor-pointer"
-                  >
+                  <Button className="w-full py-2.5 rounded-lg text-[16px] font-semibold text-white bg-gradient-to-br from-violet-600 to-indigo-600 hover:opacity-90 transition-all cursor-pointer">
                     Get Started
                   </Button>
                 </Link>
@@ -250,7 +278,7 @@ export default function Navbar() {
         )}
       </nav>
 
-      {/* Spacer so content doesn't hide under fixed navbar */}
+      {/* Spacer */}
       <div className="h-16" aria-hidden />
     </>
   );

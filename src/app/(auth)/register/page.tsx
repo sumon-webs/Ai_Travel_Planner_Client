@@ -3,8 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signUp, signIn } from '@/lib/auth-client';
+import { signUp, signIn, getOAuthCallbackURL } from '@/lib/auth-client';
 import { Card, Button, Input } from '@heroui/react';
+import { Zap } from 'lucide-react';
+
+const DEMO_EMAIL = 'demo@aitravel.com';
+const DEMO_PASSWORD = 'Demo@123456';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -14,6 +18,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,14 +48,44 @@ export default function RegisterPage() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setError('');
+    setDemoLoading(true);
+    // Try signing in with demo credentials directly
+    const { error: authError } = await signIn.email({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+      callbackURL: '/',
+    });
+    if (authError) {
+      // If demo account doesn't exist yet, create it
+      const { error: signUpError } = await signUp.email({
+        name: 'Demo User',
+        email: DEMO_EMAIL,
+        password: DEMO_PASSWORD,
+        callbackURL: '/',
+      });
+      if (signUpError) {
+        setError('Could not log in as demo user. Please try again.');
+        setDemoLoading(false);
+        return;
+      }
+    }
+    setDemoLoading(false);
+    router.push('/');
+    router.refresh();
+  };
+
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true);
     await signIn.social({
       provider: 'google',
-      callbackURL: '/',
+      callbackURL: getOAuthCallbackURL('/'),
     });
     setGoogleLoading(false);
   };
+
+  const anyLoading = loading || googleLoading || demoLoading;
 
   return (
     <div className="relative min-h-[100dvh] flex items-center justify-center p-6 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] overflow-hidden">
@@ -75,12 +110,28 @@ export default function RegisterPage() {
           </div>
         )}
 
+        {/* Demo Login Button */}
+        <Button
+          id="demo-register-btn"
+          type="button"
+          onPress={handleDemoLogin}
+          isDisabled={anyLoading}
+          className="w-full h-11 flex items-center justify-center gap-2.5 bg-gradient-to-r from-amber-500/90 to-orange-500/90 hover:from-amber-500 hover:to-orange-500 text-white font-semibold text-[15px] rounded-xl shadow-[0_2px_12px_rgba(245,158,11,0.35)] hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(245,158,11,0.45)] transition-all cursor-pointer mb-3"
+        >
+          {demoLoading ? (
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" aria-hidden="true" />
+          ) : (
+            <Zap className="w-4 h-4 shrink-0" />
+          )}
+          {demoLoading ? 'Logging in…' : '⚡ Demo Login'}
+        </Button>
+
         {/* Google Sign-Up */}
         <Button
           id="google-signup-btn"
           type="button"
           onPress={handleGoogleSignUp}
-          isDisabled={googleLoading || loading}
+          isDisabled={anyLoading}
           className="w-full h-11 flex items-center justify-center gap-2.5 bg-white/90 hover:bg-white text-gray-800 font-semibold text-[15px] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)] transition-all cursor-pointer"
         >
           {googleLoading ? (
@@ -163,7 +214,7 @@ export default function RegisterPage() {
           <Button
             id="register-submit-btn"
             type="submit"
-            isDisabled={loading || googleLoading}
+            isDisabled={anyLoading}
             className="w-full h-12 mt-1.5 flex items-center justify-center gap-2.5 bg-gradient-to-r from-violet-500 to-indigo-500 font-semibold text-[15px] text-white rounded-xl shadow-[0_4px_15px_rgba(139,92,246,0.4)] hover:opacity-90 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(139,92,246,0.5)] transition-all cursor-pointer"
           >
             {loading && (
@@ -173,8 +224,15 @@ export default function RegisterPage() {
           </Button>
         </form>
 
+        {/* Demo credentials hint */}
+        <div className="mt-4 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 text-center">
+          <p className="text-[12px] text-amber-300/80">
+            <span className="font-semibold">Demo:</span> demo@aitravel.com · Demo@123456
+          </p>
+        </div>
+
         {/* Footer Link */}
-        <p className="text-center text-[14px] text-white/50 mt-6 mb-0">
+        <p className="text-center text-[14px] text-white/50 mt-5 mb-0">
           Already have an account?{' '}
           <Link href="/login" className="text-violet-300 font-medium hover:text-violet-200 hover:underline transition-colors">
             Sign in

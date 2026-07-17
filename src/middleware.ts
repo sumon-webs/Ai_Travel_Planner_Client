@@ -1,12 +1,31 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Public paths that do NOT require authentication
-const PUBLIC_PATHS = ['/login', '/register'];
+// Public-only paths (redirect to home if already authenticated)
+const AUTH_ONLY_PATHS = ['/login', '/register'];
 
-// Paths that require authentication — extend this list as you add pages
-// Currently we protect everything except public paths and Next.js internals
-const PROTECTED_PREFIXES = ['/dashboard', '/profile', '/trips', '/items/add'];
+// Paths that require authentication — extend as you add protected pages
+const PROTECTED_PREFIXES = [
+  '/dashboard',
+  '/profile',
+  '/trips',
+  '/items/add',
+  '/items/manage',
+];
+
+async function getSession(request: NextRequest) {
+  try {
+    const sessionUrl = `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/auth/get-session`;
+    const sessionRes = await fetch(sessionUrl, {
+      headers: {
+        cookie: request.headers.get('cookie') ?? '',
+      },
+    });
+    return await sessionRes.json();
+  } catch {
+    return null;
+  }
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -15,41 +34,35 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
+    pathname.startsWith('/auth-callback') ||
     pathname.includes('.')
   ) {
     return NextResponse.next();
   }
 
-  // Check if this is a protected route
   const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) =>
     pathname.startsWith(prefix)
   );
+  const isAuthOnlyRoute = AUTH_ONLY_PATHS.includes(pathname);
 
-  if (!isProtectedRoute) {
+  // Fast-path: neither protected nor auth-only — let through
+  if (!isProtectedRoute && !isAuthOnlyRoute) {
     return NextResponse.next();
   }
 
-  // Verify session by calling the Express backend
-  try {
-    const sessionUrl = `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000'}/api/auth/get-session`;
+  const session = await getSession(request);
+  const isLoggedIn = !!session?.user;
 
-    const sessionRes = await fetch(sessionUrl, {
-      headers: {
-        cookie: request.headers.get('cookie') ?? '',
-      },
-    });
-
-    const session = await sessionRes.json();
-
-    if (!session?.user) {
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('from', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-  } catch {
-    // If backend is unreachable, redirect to login to be safe
+  // ── Protected route — redirect to login if not authenticated ──
+  if (isProtectedRoute && !isLoggedIn) {
     const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('from', pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // ── Auth-only route — redirect to home if already authenticated ──
+  if (isAuthOnlyRoute && isLoggedIn) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();

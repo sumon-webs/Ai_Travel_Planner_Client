@@ -6,3 +6,10 @@ export const authClient = createAuthClient({
 });
 
 export const { signIn, signUp, signOut, useSession } = authClient;
+
+/** Helper: returns the full absolute callbackURL for OAuth flows */
+export function getOAuthCallbackURL(path = '/') {
+  if (typeof window === 'undefined') return path;
+  const base = window.location.origin;
+  return `${base}${path}`;
+}
