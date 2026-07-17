@@ -9,8 +9,8 @@ import { Button } from '@heroui/react';
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'Explore', href: '/explore' },
+  { label: 'Plan Trip', href: '/plan-trip' },
   { label: 'My Trips', href: '/trips' },
-  { label: 'Favorites', href: '/favorites' },
 ];
 
 export default function Navbar() {
