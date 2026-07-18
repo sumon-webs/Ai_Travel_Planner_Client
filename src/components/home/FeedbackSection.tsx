@@ -4,6 +4,7 @@ import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button, Chip, Input, Checkbox } from '@heroui/react';
 import { Star, MessageSquare, Mail, Send, CheckCircle, Sparkles, Phone, MapPin } from 'lucide-react';
 
@@ -15,10 +16,9 @@ import GlassTextarea from '../plan-trip/GlassTextarea';
 const feedbackSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email address'),
-  subject: z.string().min(3, 'Subject must be at least 3 characters'),
+  subject: z.string().min(3, 'Subject must be at least 3 characters').optional(),
   rating: z.number().min(1).max(5),
   message: z.string().min(10, 'Message must be at least 10 characters'),
-  consent: z.boolean().refine((val) => val === true, 'You must agree to the terms'),
 });
 
 type FeedbackFormValues = z.infer<typeof feedbackSchema>;
@@ -26,6 +26,8 @@ type FeedbackFormValues = z.infer<typeof feedbackSchema>;
 export default function FeedbackSection() {
   const [submitted, setSubmitted] = useState(false);
   const [hoveredRating, setHoveredRating] = useState(0);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -42,18 +44,47 @@ export default function FeedbackSection() {
       subject: '',
       rating: 0,
       message: '',
-      consent: false,
     },
+    mode: 'onSubmit', // Validate only on form submission
   });
 
   const currentRating = watch('rating');
 
   const onSubmit = async (data: FeedbackFormValues) => {
-    // Simulate form submission (no backend connection)
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log('Feedback submitted:', data);
-    setSubmitted(true);
-    reset();
+    console.log("Submitted");
+    setSubmitError(null);
+    const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+
+    try {
+      const response = await fetch(`${serverUrl}/api/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.fullName,
+          email: data.email,
+          subject: data.subject,
+          message: data.message,
+          rating: data.rating,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to submit feedback');
+      }
+
+      setSubmitted(true);
+      reset();
+      // Refresh testimonials to show the new feedback
+      queryClient.invalidateQueries({ queryKey: ['feedback'] });
+    } catch (error) {
+      console.error('Feedback submission error:', error);
+      setSubmitError(
+        error instanceof Error ? error.message : 'An error occurred while submitting your feedback'
+      );
+    }
   };
 
   const handleRatingClick = (rating: number) => {
@@ -62,6 +93,7 @@ export default function FeedbackSection() {
 
   const handleReset = () => {
     setSubmitted(false);
+    setSubmitError(null);
     reset();
   };
 
@@ -204,7 +236,7 @@ export default function FeedbackSection() {
                     </FormField>
 
                     {/* Subject */}
-                    <FormField label="Subject" htmlFor="subject" error={errors.subject?.message} required>
+                    <FormField label="Subject" htmlFor="subject" error={errors.subject?.message}>
                       <GlassInput
                         id="subject"
                         type="text"
@@ -250,33 +282,12 @@ export default function FeedbackSection() {
                       />
                     </FormField>
 
-                    {/* Consent Checkbox */}
-                    <div className="space-y-2">
-                      <Checkbox
-                        id="consent"
-                        isSelected={watch('consent')}
-                        onChange={(value: boolean) => setValue('consent', value)}
-                        isInvalid={!!errors.consent}
-                        className="text-slate-300"
-                      >
-                        <span className="text-sm text-slate-300">
-                          I agree to the{' '}
-                          <a
-                            href="#"
-                            className="text-violet-400 hover:text-violet-300 underline underline-offset-2"
-                          >
-                            Terms of Service
-                          </a>{' '}
-                          and{' '}
-                          <a
-                            href="#"
-                            className="text-violet-400 hover:text-violet-300 underline underline-offset-2"
-                          >
-                            Privacy Policy
-                          </a>
-                        </span>
-                      </Checkbox>
-                    </div>
+                    {/* Error Message */}
+                    {submitError && (
+                      <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                        {submitError}
+                      </div>
+                    )}
 
                     {/* Submit Button */}
                     <Button

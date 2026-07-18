@@ -3,6 +3,7 @@
 import { useSession, signOut } from '@/lib/auth-client';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { Card } from '@heroui/react';
 import {
   User, Mail, Calendar, MapPin, LogOut,
@@ -20,6 +21,13 @@ export default function ProfilePage() {
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
 
   const user = session?.user;
+
+  // Redirect to login if user is not authenticated
+  useEffect(() => {
+    if (!isPending && !user) {
+      router.push('/login');
+    }
+  }, [isPending, user, router]);
 
   // Fetch user's trip count
   const { data: tripsData } = useQuery<{ data: TripStats }>({
@@ -74,7 +82,6 @@ export default function ProfilePage() {
   }
 
   if (!user) {
-    router.push('/login');
     return null;
   }
 

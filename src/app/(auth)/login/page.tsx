@@ -73,7 +73,7 @@ function LoginForm() {
   const anyLoading = loading || googleLoading || demoLoading;
 
   return (
-    <Card className="relative z-10 w-full max-w-[420px] bg-white/[0.06] backdrop-blur-3xl border border-white/[0.12] rounded-[1.25rem] px-8 py-10 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)] animate-[slideUp_0.4s_ease-out_both]">
+    <Card className="relative z-10 w-full max-w-[420px] sm:max-w-[420px] bg-white/[0.06] backdrop-blur-3xl border border-white/[0.12] rounded-[1.25rem] px-6 sm:px-8 py-8 sm:py-10 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)] animate-[slideUp_0.4s_ease-out_both]">
       {/* Logo / Heading */}
       <div className="text-center mb-7">
         <div className="text-4xl mb-3 animate-[pulse-icon_2s_ease-in-out_infinite]">✈️</div>
