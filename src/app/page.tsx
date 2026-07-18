@@ -1,6 +1,7 @@
 
 
 import AIFeatures from '@/components/home/AIFeatures'
+import FeedbackSection from '@/components/home/FeedbackSection'
 import Hero from '@/components/home/Hero'
 import HowItWorks from '@/components/home/HowItWorks'
 import Newsletter from '@/components/home/Newsletter'
@@ -18,7 +19,7 @@ export default function Home() {
       <WhyChooseUs/>
       <TravelCategories/>
       <Newsletter/>
-
+<FeedbackSection/>
     </div>
   )
 }
