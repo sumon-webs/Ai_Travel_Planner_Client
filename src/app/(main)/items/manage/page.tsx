@@ -143,8 +143,7 @@ export default function ManageDestinationsPage() {
       if (!res.ok) throw new Error('Failed to fetch your destinations');
       return res.json();
     },
-    // TEMPORARILY DISABLED: enabled: !!session?.user,
-    enabled: true, // Allow fetching even without authentication for testing
+    enabled: !!session?.user,
   });
 
   const deleteMutation = useMutation({
