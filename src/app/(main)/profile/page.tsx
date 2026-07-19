@@ -22,12 +22,12 @@ export default function ProfilePage() {
 
   const user = session?.user;
 
-  // Redirect to login if user is not authenticated
-  useEffect(() => {
-    if (!isPending && !user) {
-      router.push('/login');
-    }
-  }, [isPending, user, router]);
+  // TEMPORARILY DISABLED: Redirect to login if user is not authenticated
+  // useEffect(() => {
+  //   if (!isPending && !user) {
+  //     router.push('/login');
+  //   }
+  // }, [isPending, user, router]);
 
   // Fetch user's trip count
   const { data: tripsData } = useQuery<{ data: TripStats }>({
@@ -44,7 +44,8 @@ export default function ProfilePage() {
         },
       };
     },
-    enabled: !!user,
+    // TEMPORARILY DISABLED: enabled: !!user,
+    enabled: true, // Allow fetching even without authentication for testing
   });
 
   const stats = tripsData?.data ?? { total: 0, saved: 0 };

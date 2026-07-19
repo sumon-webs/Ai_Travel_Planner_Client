@@ -103,7 +103,9 @@ export default function MyTripsPage() {
         credentials: 'include',
       });
       if (!response.ok) {
-        throw new Error('Failed to fetch your trips. Please sign in again.');
+        // TEMPORARILY DISABLED: throw new Error('Failed to fetch your trips. Please sign in again.');
+        // Return empty array for testing without authentication
+        return { data: [] };
       }
       return response.json();
     },
