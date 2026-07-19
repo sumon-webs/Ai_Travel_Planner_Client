@@ -56,8 +56,8 @@ export default function Navbar() {
   }, [pathname]);
 
   const user = session?.user;
-  const initials = user?.name
-    ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+  const initials = user ? '?' : session?.user?.name
+    ? session.user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
 
   const handleSignOut = async () => {
