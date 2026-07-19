@@ -20,6 +20,7 @@ async function getSession(request: NextRequest) {
       headers: {
         cookie: request.headers.get('cookie') ?? '',
       },
+      credentials: 'include',
     });
     return await sessionRes.json();
   } catch {
