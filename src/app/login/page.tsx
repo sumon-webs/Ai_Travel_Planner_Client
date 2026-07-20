@@ -8,11 +8,12 @@ import AuthForm from '@/components/auth/AuthForm';
 import GoogleButton from '@/components/auth/GoogleButton';
 import DemoLoginCard from '@/components/auth/DemoLoginCard';
 import AuthFooter from '@/components/auth/AuthFooter';
-import { signIn } from '@/lib/auth-client';
+import { signIn, useSession } from '@/lib/auth-client';
 
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { data: session, isPending } = useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,8 +27,8 @@ export default function LoginPage() {
       await signIn.email({
         email,
         password,
+        callbackURL: `${window.location.origin}/`,
       });
-      router.push('/');
     } catch (error) {
       console.error('Login failed:', error);
       setIsLoading(false);
@@ -53,13 +54,18 @@ export default function LoginPage() {
       await signIn.email({
         email: 'demo@aitravel.com',
         password: 'Demo123@',
+        callbackURL: `${window.location.origin}/`,
       });
-      router.push('/');
     } catch (error) {
       console.error('Demo login failed:', error);
       setIsLoading(false);
     }
   };
+
+  // Redirect to home if session is available (after successful login)
+  if (!isPending && session) {
+    router.push('/');
+  }
 
   return (
     <AuthLayout>

@@ -7,11 +7,12 @@ import AuthCard from '@/components/auth/AuthCard';
 import AuthForm from '@/components/auth/AuthForm';
 import GoogleButton from '@/components/auth/GoogleButton';
 import AuthFooter from '@/components/auth/AuthFooter';
-import { signUp, signIn } from '@/lib/auth-client';
+import { signUp, signIn, useSession } from '@/lib/auth-client';
 
 export default function SignupPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { data: session, isPending } = useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,8 +28,8 @@ export default function SignupPage() {
         email,
         password,
         name: fullName,
+        callbackURL: `${window.location.origin}/`,
       });
-      router.push('/');
     } catch (error) {
       console.error('Signup failed:', error);
       setIsLoading(false);
@@ -47,6 +48,11 @@ export default function SignupPage() {
       setIsLoading(false);
     }
   };
+
+  // Redirect to home if session is available (after successful signup)
+  if (!isPending && session) {
+    router.push('/');
+  }
 
   return (
     <AuthLayout>
