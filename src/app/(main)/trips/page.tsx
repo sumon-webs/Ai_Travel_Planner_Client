@@ -1,7 +1,9 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from '@/lib/auth-client';
 import ChatAssistant from '@/components/trips/ChatAssistant';
 import {
   MapPin,
@@ -88,6 +90,8 @@ interface Trip {
 }
 
 export default function MyTripsPage() {
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
   const queryClient = useQueryClient();
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [activeDayTab, setActiveDayTab] = useState<number>(1);
@@ -99,12 +103,15 @@ export default function MyTripsPage() {
   const { data, isLoading, isError, error } = useQuery<{ data: Trip[] }>({
     queryKey: ['trips'],
     queryFn: async () => {
-      const response = await fetch(`${serverUrl}/api/trips/public?limit=100`);
+      const response = await fetch(`${serverUrl}/api/trips`, {
+        credentials: 'include',
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch trips.');
       }
       return response.json();
     },
+    enabled: !!session, // Only fetch when authenticated
   });
 
   // ── Delete Trip Mutation ──
@@ -112,6 +119,7 @@ export default function MyTripsPage() {
     mutationFn: async (tripId: string) => {
       const response = await fetch(`${serverUrl}/api/trips/${tripId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       if (!response.ok) {
         throw new Error('Failed to delete the trip.');
@@ -127,6 +135,24 @@ export default function MyTripsPage() {
       }
     },
   });
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push('/login');
+    }
+  }, [session, isPending, router]);
+
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
 
   const getDestinationName = (dest: string | { name?: string; city?: string; country?: string } | null | undefined): string => {
     if (!dest) return 'Unknown Destination';

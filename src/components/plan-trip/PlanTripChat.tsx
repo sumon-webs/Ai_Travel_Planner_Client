@@ -58,7 +58,9 @@ export default function PlanTripChat({ tripId, tripTitle, destination }: PlanTri
       try {
         setIsLoadingHistory(true);
         setConnectionError(null);
-        const res = await fetch(`${serverUrl}/api/chats/${tripId}`);
+        const res = await fetch(`${serverUrl}/api/chats/${tripId}`, {
+          credentials: 'include',
+        });
         if (!res.ok) throw new Error('Failed to load chat history.');
         const json = await res.json();
         if (json.status === 'success' && Array.isArray(json.data?.messages)) {
@@ -94,6 +96,7 @@ export default function PlanTripChat({ tripId, tripTitle, destination }: PlanTri
       const res = await fetch(`${serverUrl}/api/chats/${tripId}/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ content: trimmed }),
       });
 
@@ -157,6 +160,7 @@ export default function PlanTripChat({ tripId, tripTitle, destination }: PlanTri
       setConnectionError(null);
       const res = await fetch(`${serverUrl}/api/chats/${tripId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to clear history.');
       setMessages([]);

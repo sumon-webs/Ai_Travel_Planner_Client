@@ -1,11 +1,13 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Card } from '@heroui/react';
 import {
   User, Mail, Calendar, MapPin,
   Plane, Bookmark, Shield, Globe,
 } from 'lucide-react';
+import { useSession } from '@/lib/auth-client';
 
 interface TripStats {
   total: number;
@@ -13,13 +15,28 @@ interface TripStats {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
   const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-  // Fetch public trip count (no authentication required)
+  // Redirect to login if not authenticated
+  if (!isPending && !session) {
+    router.push('/login');
+    return null;
+  }
+
+  const user = session?.user;
+  const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'GU';
+  const provider = 'Email';
+  const joinedDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  // Fetch user's trip count
   const { data: tripsData } = useQuery<{ data: TripStats }>({
-    queryKey: ['publicTrips'],
+    queryKey: ['userTrips', user?.id],
     queryFn: async () => {
-      const res = await fetch(`${serverUrl}/api/trips/public?limit=100`);
+      const res = await fetch(`${serverUrl}/api/trips?userId=${user?.id}`, {
+        credentials: 'include',
+      });
       if (!res.ok) return { data: { total: 0, saved: 0 } };
       const json = await res.json();
       const trips = Array.isArray(json?.data) ? json.data : [];
@@ -30,21 +47,18 @@ export default function ProfilePage() {
         },
       };
     },
+    enabled: !!user?.id,
   });
 
   const stats = tripsData?.data ?? { total: 0, saved: 0 };
 
-  // Demo user data (since no authentication)
-  const user = {
-    name: 'Guest User',
-    email: 'guest@example.com',
-    image: null,
-    createdAt: new Date().toISOString(),
-  };
-
-  const provider = 'Guest';
-  const joinedDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  const initials = 'GU';
+  if (isPending || !user) {
+    return (
+      <div className="min-h-screen bg-[#0a081a] flex items-center justify-center">
+        <div className="text-white/50">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <main className="relative min-h-screen bg-[#0a081a] text-white overflow-hidden py-12 px-4 sm:px-6">

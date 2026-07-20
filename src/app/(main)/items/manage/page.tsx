@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from '@/lib/auth-client';
 import {
   MapPin, Trash2, Eye, Plus, AlertCircle,
   Star, DollarSign, Clock, Compass, X, TriangleAlert,
@@ -128,23 +129,29 @@ function DeleteModal({
 // ── Main Page ──────────────────────────────────────────────
 export default function ManageDestinationsPage() {
   const router = useRouter();
+  const { data: session, isPending } = useSession();
   const queryClient = useQueryClient();
-  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   const [deleteTarget, setDeleteTarget] = useState<Destination | null>(null);
+
+  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   const { data, isLoading, isError } = useQuery<{ data: Destination[] }>({
     queryKey: ['myDestinations'],
     queryFn: async () => {
-      const res = await fetch(`${serverUrl}/api/destinations/my`);
+      const res = await fetch(`${serverUrl}/api/destinations/my`, {
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to fetch your destinations');
       return res.json();
     },
+    enabled: !!session, // Only fetch when authenticated
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`${serverUrl}/api/destinations/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to delete destination');
       return res.json();
@@ -155,6 +162,24 @@ export default function ManageDestinationsPage() {
       setDeleteTarget(null);
     },
   });
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push('/login');
+    }
+  }, [session, isPending, router]);
+
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
 
   const destinations = data?.data || [];
 

@@ -1,13 +1,32 @@
-import type { Metadata } from 'next';
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from '@/lib/auth-client';
 import TripPlannerForm from '@/components/plan-trip/TripPlannerForm';
 
-export const metadata: Metadata = {
-  title: 'Plan Your Trip — AI Travel Planner',
-  description:
-    'Let AI craft your perfect trip itinerary. Set your destination, budget, travel style, and interests — and get a personalised plan in seconds.',
-};
-
 export default function PlanTripPage() {
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push('/login');
+    }
+  }, [session, isPending, router]);
+
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
+
   return (
     <main className="relative min-h-screen bg-slate-950 text-white overflow-hidden">
       {/* ── Background Blobs ── */}

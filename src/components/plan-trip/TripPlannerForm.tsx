@@ -173,6 +173,7 @@ export default function TripPlannerForm() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(values),
       });
 
@@ -237,6 +238,7 @@ export default function TripPlannerForm() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
 

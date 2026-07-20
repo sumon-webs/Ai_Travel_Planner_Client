@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useSession } from '@/lib/auth-client';
 import {
   Input,
   TextArea,
@@ -82,6 +83,7 @@ const RATINGS = ['1', '2', '3', '4', '5'];
 
 export default function AddDestinationPage() {
   const router = useRouter();
+  const { data: session, isPending } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -110,6 +112,24 @@ export default function AddDestinationPage() {
       coverImage: '',
     },
   });
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push('/login');
+    }
+  }, [session, isPending, router]);
+
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
 
   const addGalleryField = () => {
     setGalleryImages([...galleryImages, '']);
@@ -141,6 +161,7 @@ export default function AddDestinationPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           ...data,
           galleryImages: filteredGallery,
