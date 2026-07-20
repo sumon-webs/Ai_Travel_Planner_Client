@@ -32,7 +32,7 @@ export default function Hero() {
   const [prompt, setPrompt] = useState('');
   const [promptError, setPromptError] = useState('');
 
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   const { data: statsData, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ['stats'],

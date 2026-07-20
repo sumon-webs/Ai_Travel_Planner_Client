@@ -131,7 +131,7 @@ export default function ManageDestinationsPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   const [deleteTarget, setDeleteTarget] = useState<Destination | null>(null);
 
   const { data, isLoading, isError } = useQuery<{ data: Destination[] }>({

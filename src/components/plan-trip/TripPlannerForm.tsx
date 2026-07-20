@@ -167,7 +167,7 @@ export default function TripPlannerForm() {
   const generateMutation = useMutation({
     mutationFn: async (values: TripFormValues) => {
       setLoadingMessageIndex(0);
-      const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+      const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const response = await fetch(`${serverUrl}/api/ai/generate-trip`, {
         method: 'POST',
         headers: {
@@ -199,7 +199,7 @@ export default function TripPlannerForm() {
     mutationFn: async () => {
       if (!generatedItinerary || !formData) return;
 
-      const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+      const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       
       // Calculate duration
       const start = new Date(formData.startDate);

@@ -59,7 +59,7 @@ export default function ChatAssistant({ trip }: ChatAssistantProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   // Quick Action Suggestions requested by requirements
   const suggestions = [

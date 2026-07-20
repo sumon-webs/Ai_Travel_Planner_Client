@@ -126,7 +126,7 @@ function DestinationCard({ dest }: { dest: Destination }) {
 
 // ── Main Page ──────────────────────────────────────────────
 export default function ExplorePage() {
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   const [search, setSearch] = useState('');
   const [country, setCountry] = useState('');

@@ -93,7 +93,7 @@ export default function MyTripsPage() {
   const [activeDayTab, setActiveDayTab] = useState<number>(1);
   const [deletingTripId, setDeletingTripId] = useState<string | null>(null);
 
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   // ── Fetch Trips Query ──
   const { data, isLoading, isError, error } = useQuery<{ data: Trip[] }>({

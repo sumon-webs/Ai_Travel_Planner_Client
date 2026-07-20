@@ -87,7 +87,7 @@ export default function AddDestinationPage() {
   const [success, setSuccess] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>(['']);
 
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   const {
     register,

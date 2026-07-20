@@ -18,7 +18,7 @@ interface Destination {
 }
 
 export default function TrendingDestinations() {
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   const { data, isLoading, error } = useQuery<{ data: Destination[] }>({
     queryKey: ['trending-destinations'],

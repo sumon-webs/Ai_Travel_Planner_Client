@@ -53,7 +53,7 @@ export default function FeedbackSection() {
   const onSubmit = async (data: FeedbackFormValues) => {
     console.log("Submitted");
     setSubmitError(null);
-    const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+    const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     try {
       const response = await fetch(`${serverUrl}/api/feedback`, {

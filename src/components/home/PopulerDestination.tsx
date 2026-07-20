@@ -34,7 +34,7 @@ function SkeletonCard() {
 }
 
 export default function PopularDestinations() {
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   const { data, isLoading, isError } = useQuery<{ data: Destination[] }>({
     queryKey: ['destinations'],

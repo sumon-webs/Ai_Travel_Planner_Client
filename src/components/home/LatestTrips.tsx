@@ -17,7 +17,7 @@ interface Trip {
 }
 
 export default function LatestTrips() {
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   const { data, isLoading, error } = useQuery<{ data: Trip[] }>({
     queryKey: ['public-trips'],
