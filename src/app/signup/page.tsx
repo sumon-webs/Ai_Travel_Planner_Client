@@ -49,10 +49,7 @@ export default function SignupPage() {
     }
   };
 
-  // Redirect to home if session is available (after successful signup)
-  if (!isPending && session) {
-    router.push('/');
-  }
+
 
   return (
     <AuthLayout>
