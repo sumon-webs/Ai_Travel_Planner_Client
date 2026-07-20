@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -128,7 +127,6 @@ function DeleteModal({
 
 // ── Main Page ──────────────────────────────────────────────
 export default function ManageDestinationsPage() {
-  const { data: session } = useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
   const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -137,20 +135,16 @@ export default function ManageDestinationsPage() {
   const { data, isLoading, isError } = useQuery<{ data: Destination[] }>({
     queryKey: ['myDestinations'],
     queryFn: async () => {
-      const res = await fetch(`${serverUrl}/api/destinations/my`, {
-        credentials: 'include',
-      });
+      const res = await fetch(`${serverUrl}/api/destinations/my`);
       if (!res.ok) throw new Error('Failed to fetch your destinations');
       return res.json();
     },
-    enabled: !!session?.user,
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`${serverUrl}/api/destinations/${id}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to delete destination');
       return res.json();

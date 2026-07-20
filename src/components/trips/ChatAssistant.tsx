@@ -94,9 +94,7 @@ export default function ChatAssistant({ trip }: ChatAssistantProps) {
     const fetchHistory = async () => {
       try {
         setConnectionError(null);
-        const response = await fetch(`${serverUrl}/api/chats/${trip._id}`, {
-          credentials: 'include',
-        });
+        const response = await fetch(`${serverUrl}/api/chats/${trip._id}`);
         if (!response.ok) {
           throw new Error('Failed to load chat logs.');
         }
@@ -149,7 +147,6 @@ export default function ChatAssistant({ trip }: ChatAssistantProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ content: userMessageText }),
-        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -227,7 +224,6 @@ export default function ChatAssistant({ trip }: ChatAssistantProps) {
         setConnectionError(null);
         const response = await fetch(`${serverUrl}/api/chats/${trip._id}`, {
           method: 'DELETE',
-          credentials: 'include',
         });
         if (!response.ok) {
           throw new Error('Failed to delete chat logs.');

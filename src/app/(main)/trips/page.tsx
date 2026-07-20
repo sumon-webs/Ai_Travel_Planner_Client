@@ -99,11 +99,9 @@ export default function MyTripsPage() {
   const { data, isLoading, isError, error } = useQuery<{ data: Trip[] }>({
     queryKey: ['trips'],
     queryFn: async () => {
-      const response = await fetch(`${serverUrl}/api/trips`, {
-        credentials: 'include',
-      });
+      const response = await fetch(`${serverUrl}/api/trips/public?limit=100`);
       if (!response.ok) {
-        throw new Error('Failed to fetch your trips. Please sign in again.');
+        throw new Error('Failed to fetch trips.');
       }
       return response.json();
     },
@@ -114,7 +112,6 @@ export default function MyTripsPage() {
     mutationFn: async (tripId: string) => {
       const response = await fetch(`${serverUrl}/api/trips/${tripId}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
       if (!response.ok) {
         throw new Error('Failed to delete the trip.');
