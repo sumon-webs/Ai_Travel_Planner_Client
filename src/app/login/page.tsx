@@ -38,10 +38,15 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      await signIn.social({
+      const result = await signIn.social({
         provider: 'google',
-        callbackURL: "https://ai-travel-planner-client-psi.vercel.app",
+        callbackURL: `${window.location.origin}/`,
       });
+      
+      // Handle redirect if Better Auth returns a redirect URL
+      if (result && typeof result === 'object' && 'redirect' in result && result.redirect && 'url' in result) {
+        window.location.href = (result as any).url;
+      }
     } catch (error) {
       console.error('Google login failed:', error);
       setIsLoading(false);
