@@ -6,7 +6,6 @@ import AuthLayout from '@/components/auth/AuthLayout';
 import AuthCard from '@/components/auth/AuthCard';
 import AuthForm from '@/components/auth/AuthForm';
 import GoogleButton from '@/components/auth/GoogleButton';
-import DemoLoginCard from '@/components/auth/DemoLoginCard';
 import AuthFooter from '@/components/auth/AuthFooter';
 import { signIn, useSession } from '@/lib/auth-client';
 
@@ -53,20 +52,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    setIsLoading(true);
-    try {
-      await signIn.email({
-        email: 'demo@aitravel.com',
-        password: 'Demo123@',
-        callbackURL: `${window.location.origin}/`,
-      });
-    } catch (error) {
-      console.error('Demo login failed:', error);
-      setIsLoading(false);
-    }
-  };
-
   // Redirect to home if session is available (after successful login)
   if (!isPending && session) {
     router.push('/');
@@ -77,7 +62,6 @@ export default function LoginPage() {
       <AuthCard title="Welcome Back" showIllustration>
         <AuthForm type="login" onSubmit={handleSubmit} isLoading={isLoading} />
         <GoogleButton onClick={handleGoogleLogin} isLoading={isLoading} />
-        <DemoLoginCard onDemoLogin={handleDemoLogin} isLoading={isLoading} />
         <AuthFooter type="login" />
       </AuthCard>
     </AuthLayout>
