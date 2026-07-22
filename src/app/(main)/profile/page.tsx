@@ -1,23 +1,41 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { Card } from '@heroui/react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, Button, Input } from '@heroui/react';
 import {
   User, Mail, Calendar, MapPin,
   Plane, Bookmark, Shield, Globe,
+  Edit2, X, Loader2, CheckCircle,
 } from 'lucide-react';
 import { useSession } from '@/lib/auth-client';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
 interface TripStats {
   total: number;
   saved: number;
 }
 
+// Zod schema for profile update validation
+const profileUpdateSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  image: z.string().url('Invalid URL').optional().or(z.literal('')),
+});
+
+type ProfileUpdateForm = z.infer<typeof profileUpdateSchema>;
+
 export default function ProfilePage() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
+  const queryClient = useQueryClient();
   const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+  // Modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Redirect to login if not authenticated
   if (!isPending && !session) {
@@ -29,6 +47,64 @@ export default function ProfilePage() {
   const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'GU';
   const provider = 'Email';
   const joinedDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  // React Hook Form setup
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<ProfileUpdateForm>({
+    resolver: zodResolver(profileUpdateSchema),
+    defaultValues: {
+      name: user?.name || '',
+      image: user?.image || '',
+    },
+  });
+
+  // Profile update mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: ProfileUpdateForm) => {
+      const response = await fetch(`${serverUrl}/api/users/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update profile');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      // Refresh session data
+      queryClient.invalidateQueries({ queryKey: ['session'] });
+      setIsEditModalOpen(false);
+      setSuccessMessage('Profile updated successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    },
+    onError: (error: Error) => {
+      console.error('Profile update error:', error);
+      alert(error.message || 'Failed to update profile');
+    },
+  });
+
+  const onSubmit = (data: ProfileUpdateForm) => {
+    updateProfileMutation.mutate(data);
+  };
+
+  const handleEditClick = () => {
+    reset({
+      name: user?.name || '',
+      image: user?.image || '',
+    });
+    setIsEditModalOpen(true);
+  };
 
   // Fetch user's trip count
   const { data: tripsData } = useQuery<{ data: TripStats }>({
@@ -103,6 +179,15 @@ export default function ProfilePage() {
               <h2 className="text-[20px] font-bold text-white">{user.name}</h2>
               <p className="text-sm text-white/50 mt-0.5">Traveler</p>
             </div>
+
+            {/* Edit Profile Button */}
+            <Button
+              onPress={handleEditClick}
+              className="bg-violet-500/20 border border-violet-500/30 text-violet-300 hover:bg-violet-500/30 transition-all text-sm font-medium"
+            >
+              <Edit2 className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Button>
 
             {/* Provider badge */}
             <div className="px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/25 text-xs font-medium text-violet-300 flex items-center gap-1.5">
@@ -202,9 +287,6 @@ export default function ProfilePage() {
                 {[
                   { label: 'Plan a Trip', href: '/plan-trip', emoji: '🗺️' },
                   { label: 'My Trips', href: '/trips', emoji: '✈️' },
-                  { label: 'Explore', href: '/explore', emoji: '🌍' },
-                  { label: 'Add Destination', href: '/items/add', emoji: '📍' },
-                  { label: 'My Destinations', href: '/items/manage', emoji: '📋' },
                 ].map(({ label, href, emoji }) => (
                   <a
                     key={href}
@@ -220,6 +302,94 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-[fade-in_0.2s_ease-out]">
+          <div className="relative w-full max-w-md rounded-2xl bg-[#0f0c29]/95 border border-white/10 p-6 space-y-6 shadow-[0_16px_48px_rgba(0,0,0,0.5)]">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Edit2 className="w-5 h-5 text-violet-400" />
+                <h3 className="text-lg font-semibold text-white">Edit Profile</h3>
+              </div>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X className="w-5 h-5 text-white/60" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-2">
+                  Full Name
+                </label>
+                <Input
+                  {...register('name')}
+                  placeholder="Enter your name"
+                  className="bg-white/5 border-white/10 text-white"
+                />
+                {errors.name && (
+                  <p className="text-xs text-red-400 mt-1">{errors.name.message}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-2">
+                  Profile Picture URL
+                </label>
+                <Input
+                  {...register('image')}
+                  placeholder="https://example.com/image.jpg"
+                  className="bg-white/5 border-white/10 text-white"
+                />
+                {errors.image && (
+                  <p className="text-xs text-red-400 mt-1">{errors.image.message}</p>
+                )}
+                <p className="text-xs text-white/40 mt-1">
+                  Leave empty to remove profile picture
+                </p>
+              </div>
+
+              {/* Footer */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onPress={() => setIsEditModalOpen(false)}
+                  className="flex-1 border-white/20 text-white hover:bg-white/5"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  isDisabled={isSubmitting}
+                  className="flex-1 bg-gradient-to-r from-violet-600 to-indigo-600 text-white"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="fixed bottom-6 right-6 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 px-6 py-3 rounded-xl flex items-center gap-2 animate-in slide-in-from-right">
+          <CheckCircle className="w-5 h-5" />
+          {successMessage}
+        </div>
+      )}
     </main>
   );
 }
