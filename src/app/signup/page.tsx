@@ -41,7 +41,7 @@ export default function SignupPage() {
     try {
       await signIn.social({
         provider: 'google',
-        callbackURL: `${window.location.origin}/`,
+        callbackURL: ` https://ai-travel-planner-client-psi.vercel.app`,
       });
     } catch (error) {
       console.error('Google signup failed:', error);

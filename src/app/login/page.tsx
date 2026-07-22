@@ -40,7 +40,7 @@ export default function LoginPage() {
     try {
       await signIn.social({
         provider: 'google',
-        callbackURL: `${window.location.origin}/`,
+        callbackURL: "https://ai-travel-planner-client-psi.vercel.app",
       });
     } catch (error) {
       console.error('Google login failed:', error);
