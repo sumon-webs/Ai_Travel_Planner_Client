@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Input } from '@heroui/react';
 import {
   User, Mail, Calendar, MapPin,
   Plane, Bookmark, Shield, Globe,
-  Edit2, X, Loader2, CheckCircle,
+  Edit2, X, Loader2, CheckCircle, Upload,
 } from 'lucide-react';
 import { useSession } from '@/lib/auth-client';
 import { useForm } from 'react-hook-form';
@@ -32,10 +32,12 @@ export default function ProfilePage() {
   const { data: session, isPending } = useSession();
   const queryClient = useQueryClient();
   const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
   // Redirect to login if not authenticated
   if (!isPending && !session) {
@@ -54,6 +56,7 @@ export default function ProfilePage() {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    setValue,
   } = useForm<ProfileUpdateForm>({
     resolver: zodResolver(profileUpdateSchema),
     defaultValues: {
@@ -104,6 +107,58 @@ export default function ProfilePage() {
       image: user?.image || '',
     });
     setIsEditModalOpen(true);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const imgbbApiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+      if (!imgbbApiKey) {
+        throw new Error('ImgBB API key not configured');
+      }
+
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || 'Failed to upload image');
+      }
+
+      // Update form with the uploaded image URL
+      setValue('image', data.data.url);
+    } catch (error: any) {
+      console.error('Image upload error:', error);
+      alert(error.message || 'Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   // Fetch user's trip count
@@ -338,19 +393,49 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-white/70 mb-2">
-                  Profile Picture URL
+                  Profile Picture
                 </label>
-                <Input
-                  {...register('image')}
-                  placeholder="https://example.com/image.jpg"
-                  className="bg-white/5 border-white/10 text-white"
-                />
-                {errors.image && (
-                  <p className="text-xs text-red-400 mt-1">{errors.image.message}</p>
-                )}
-                <p className="text-xs text-white/40 mt-1">
-                  Leave empty to remove profile picture
-                </p>
+                <div className="space-y-3">
+                  <Input
+                    {...register('image')}
+                    placeholder="https://example.com/image.jpg"
+                    className="bg-white/5 border-white/10 text-white"
+                  />
+                  {errors.image && (
+                    <p className="text-xs text-red-400 mt-1">{errors.image.message}</p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onPress={triggerFileInput}
+                      isDisabled={isUploading}
+                      className="flex-1 border-white/20 text-white hover:bg-white/5"
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Image
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-white/40">
+                    Upload an image or paste a URL. Max file size: 5MB
+                  </p>
+                </div>
               </div>
 
               {/* Footer */}
