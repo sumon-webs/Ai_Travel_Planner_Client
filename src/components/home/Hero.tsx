@@ -1,22 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { Button, Input, Chip, Skeleton } from '@heroui/react';
+import { Button, Chip } from '@heroui/react';
 import {
   Sparkles,
-  Plane,
-  MapPin,
-  Calendar,
-  Users,
-  Star,
   ArrowRight,
-  Globe,
-  Compass,
-  Loader2,
-  AlertCircle,
 } from 'lucide-react';
 
 const FLOATING_ELEMENTS = [
@@ -29,28 +18,6 @@ const FLOATING_ELEMENTS = [
 
 export default function Hero() {
   const router = useRouter();
-  const [prompt, setPrompt] = useState('');
-  const [promptError, setPromptError] = useState('');
-
-  const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-
-  const { data: statsData, isLoading: statsLoading, error: statsError } = useQuery({
-    queryKey: ['stats'],
-    queryFn: async () => {
-      const response = await fetch(`${serverUrl}/api/destinations/stats`);
-      if (!response.ok) throw new Error('Failed to fetch statistics');
-      return response.json();
-    },
-  });
-
-  const handlePlanTrip = () => {
-    if (!prompt.trim()) {
-      setPromptError('Please enter a destination or trip description');
-      return;
-    }
-    setPromptError('');
-    router.push(`/plan-trip?prompt=${encodeURIComponent(prompt)}`);
-  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -71,19 +38,6 @@ export default function Hero() {
       transition: { duration: 0.5 },
     },
   };
-
-  const stats = statsData?.data || {
-    tripsPlanned: 0,
-    destinations: 0,
-    happyTravelers: 0,
-    countries: 0,
-  };
-
-  const STAT_ITEMS = [
-    { value: stats.tripsPlanned, label: 'Trips Planned', icon: Plane },
-    { value: stats.destinations, label: 'Destinations', icon: Globe },
-    { value: stats.happyTravelers, label: 'Happy Travelers', icon: Users },
-  ];
 
   return (
     <section className="relative overflow-hidden bg-slate-950 px-6 py-20 lg:py-32 text-white min-h-screen flex items-center">
@@ -141,7 +95,7 @@ export default function Hero() {
                 <span className="flex items-center gap-2 text-sm">
                   <Sparkles className="w-4 h-4 text-purple-400" />
                   <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent font-medium">
-                    AI-Powered Travel Planning
+                    AI-Powered Travel Planner
                   </span>
                 </span>
               </Chip>
@@ -157,31 +111,10 @@ export default function Hero() {
 
             {/* Description */}
             <motion.p variants={itemVariants} className="text-lg text-slate-400 leading-relaxed">
-              Describe your destination, budget, and travel style. Our AI creates a personalized travel itinerary in seconds.
+              Describe your destination, travel style, duration and budget.
+              Our AI generates a personalized travel itinerary in seconds.
             </motion.p>
 
-            {/* AI Prompt Input */}
-            <motion.div variants={itemVariants} className="space-y-4">
-              <div className="relative flex items-center">
-                <Compass className="absolute left-4 w-5 h-5 text-slate-500 pointer-events-none" />
-                <input
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Where do you want to go? e.g. 5 days in Japan under $1000"
-                  className="w-full h-14 pl-12 pr-28 sm:pr-32 bg-white/5 border border-white/10 backdrop-blur-xl rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500/50 transition-colors"
-                />
-                <Button
-                  onPress={handlePlanTrip}
-                  className="absolute right-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 sm:px-6 font-semibold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all"
-                >
-                  <span className="hidden sm:inline">Plan Trip</span>
-                  <ArrowRight className="w-4 h-4 sm:ml-2" />
-                </Button>
-              </div>
-              {promptError && (
-                <p className="text-sm text-red-400">{promptError}</p>
-              )}
-            </motion.div>
 
             {/* CTA Buttons */}
             <motion.div variants={itemVariants} className="flex flex-wrap gap-4">
@@ -200,49 +133,6 @@ export default function Hero() {
               </Button>
             </motion.div>
           </div>
-
-          {/* Right: Stats Cards */}
-          <motion.div
-            variants={itemVariants}
-            className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6"
-          >
-            {statsLoading ? (
-              // Loading Skeletons
-              STAT_ITEMS.map((_, index) => (
-                <div key={index} className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
-                  <Skeleton className="w-12 h-12 rounded-xl mb-4" />
-                  <Skeleton className="h-8 w-20 mb-2" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-              ))
-            ) : statsError ? (
-              // Error State
-              <div className="col-span-3 p-6 rounded-2xl bg-red-500/10 border border-red-500/20 backdrop-blur-xl flex items-center gap-4">
-                <AlertCircle className="w-6 h-6 text-red-400" />
-                <span className="text-red-400">Failed to load statistics</span>
-              </div>
-            ) : (
-              // Stats Cards
-              STAT_ITEMS.map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                  <motion.div
-                    key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + index * 0.1 }}
-                    className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl hover:bg-white/[0.05] transition-all group"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                      <Icon className="w-6 h-6 text-purple-400" />
-                    </div>
-                    <div className="text-3xl font-bold text-white mb-1">{stat.value.toLocaleString()}</div>
-                    <div className="text-sm text-slate-400">{stat.label}</div>
-                  </motion.div>
-                );
-              })
-            )}
-          </motion.div>
         </motion.div>
       </div>
     </section>

@@ -47,7 +47,7 @@ const FEATURES: Feature[] = [
     icon: Backpack,
     title: 'Smart Packing List',
     description:
-      'Receive a destination-aware packing checklist so you never overpack — or forget the essentials.',
+      'Receive an AI-generated packing checklist tailored to your destination and activities so you never overpack.',
     gradient: 'from-amber-500/25 to-orange-600/10',
     iconBg: 'bg-gradient-to-br from-amber-500/30 to-orange-600/20 border-amber-400/30',
     iconColor: 'text-amber-300',

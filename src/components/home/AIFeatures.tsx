@@ -3,7 +3,6 @@
 import {
   Sparkles,
   PiggyBank,
-  Compass,
   CloudSun,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -35,15 +34,6 @@ const FEATURES: Feature[] = [
     gradient: 'from-emerald-400 to-teal-500',
     iconBg: 'bg-emerald-500/10',
     iconColor: 'text-emerald-400',
-  },
-  {
-    icon: Compass,
-    title: 'Smart Destination Recommendation',
-    description:
-      'Not sure where to go? Our AI analyzes your preferences, travel history, and trends to suggest destinations you\'ll love.',
-    gradient: 'from-amber-400 to-orange-500',
-    iconBg: 'bg-amber-500/10',
-    iconColor: 'text-amber-400',
   },
   {
     icon: CloudSun,
@@ -87,7 +77,7 @@ export default function AIFeatures() {
         </div>
 
         {/* Cards Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, description, gradient, iconBg, iconColor }) => (
             <div
               key={title}

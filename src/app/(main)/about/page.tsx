@@ -8,14 +8,14 @@ export const metadata: Metadata = {
 const TEAM = [
   { name: 'AI Engine', role: 'Powered by Google Gemini', emoji: '🤖' },
   { name: 'Community', role: 'Global Traveler Network', emoji: '🌍' },
-  { name: 'Data', role: '120+ Curated Destinations', emoji: '📍' },
+  { name: 'Itineraries', role: 'Thousands of AI-Generated Trips', emoji: '✈️' },
 ];
 
 const VALUES = [
   { title: 'AI-Powered', description: 'Our Gemini-backed engine crafts personalised itineraries in seconds based on your unique preferences.', emoji: '✨' },
-  { title: 'Community-Driven', description: 'Real travelers share real destinations — no sponsored content, just authentic experiences.', emoji: '🤝' },
+  { title: 'Community-Driven', description: 'Real travelers share their AI-generated trips — no sponsored content, just authentic experiences.', emoji: '🤝' },
   { title: 'Accessible', description: 'From budget backpackers to luxury explorers, we plan trips for every style and budget.', emoji: '🎒' },
-  { title: 'Always Improving', description: 'We continuously refine our AI and destination database based on traveler feedback.', emoji: '🚀' },
+  { title: 'Always Improving', description: 'We continuously refine our AI models based on traveler feedback to deliver better trip recommendations.', emoji: '🚀' },
 ];
 
 export default function AboutPage() {
@@ -80,7 +80,7 @@ export default function AboutPage() {
         {/* CTA */}
         <div className="text-center p-12 rounded-2xl bg-gradient-to-br from-violet-600/10 to-indigo-600/10 border border-violet-500/20">
           <h2 className="text-3xl font-extrabold text-white mb-4">Ready to Plan Your Next Trip?</h2>
-          <p className="text-slate-400 mb-8 max-w-md mx-auto">Join thousands of travelers who use AI Travel Planner to discover incredible destinations and plan unforgettable journeys.</p>
+          <p className="text-slate-400 mb-8 max-w-md mx-auto">Join thousands of travelers who use AI Travel Planner to generate personalized itineraries and plan unforgettable journeys.</p>
           <a
             href="/plan-trip"
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-[15px] shadow-[0_4px_15px_rgba(139,92,246,0.4)] hover:opacity-90 hover:-translate-y-0.5 transition-all"

@@ -4,20 +4,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@heroui/react';
-import { ChevronDown, LayoutDashboard, Plus, ListChecks, Settings, LogOut } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, Settings, LogOut } from 'lucide-react';
 import { useSession, signOut } from '@/lib/auth-client';
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
-  { label: 'Explore', href: '/explore' },
   { label: 'Plan Trip', href: '/plan-trip' },
   { label: 'My Trips', href: '/trips' },
   { label: 'About', href: '/about' },
 ];
 
 const DASHBOARD_ITEMS = [
-  { label: 'Add Destination', href: '/items/add', icon: Plus, description: 'Publish a new location' },
-  { label: 'Manage Destinations', href: '/items/manage', icon: ListChecks, description: 'Edit or remove your listings' },
   { label: 'Profile', href: '/profile', icon: Settings, description: 'Account settings' },
 ];
 
