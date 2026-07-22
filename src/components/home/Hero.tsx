@@ -157,8 +157,7 @@ export default function Hero() {
 
             {/* Description */}
             <motion.p variants={itemVariants} className="text-lg text-slate-400 leading-relaxed">
-              Describe where you want to go. Our AI crafts a fully personalized itinerary — flights,
-              hotels, day-by-day activities — all tailored to your budget and preferences.
+              Describe your destination, budget, and travel style. Our AI creates a personalized travel itinerary in seconds.
             </motion.p>
 
             {/* AI Prompt Input */}
@@ -187,14 +186,15 @@ export default function Hero() {
             {/* CTA Buttons */}
             <motion.div variants={itemVariants} className="flex flex-wrap gap-4">
               <Button
-                onPress={handlePlanTrip}
-                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-3 rounded-xl font-semibold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 transition-all"
+                onPress={() => router.push('/plan-trip')}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-4 rounded-xl font-semibold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 transition-all text-lg"
               >
-                Start Planning Free
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <Sparkles className="w-5 h-5 mr-2" />
+                Start Planning with AI
+                <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <Button
-                className="border border-white/20 text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/5 transition-all"
+                className="border border-white/20 text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/5 transition-all text-lg"
               >
                 View Sample Itinerary
               </Button>
