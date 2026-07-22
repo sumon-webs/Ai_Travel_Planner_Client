@@ -59,9 +59,11 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <AuthCard title="Welcome Back" showIllustration>
-        <AuthForm type="login" onSubmit={handleSubmit} isLoading={isLoading} />
-        <GoogleButton onClick={handleGoogleLogin} isLoading={isLoading} />
+      <AuthCard  title="Welcome Back" showIllustration>
+        <div className=' space-y-3'>
+          <AuthForm type="login" onSubmit={handleSubmit} isLoading={isLoading} />
+          <GoogleButton onClick={handleGoogleLogin} isLoading={isLoading} />
+        </div>
         <AuthFooter type="login" />
       </AuthCard>
     </AuthLayout>

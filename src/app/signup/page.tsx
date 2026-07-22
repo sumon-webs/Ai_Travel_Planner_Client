@@ -59,8 +59,10 @@ export default function SignupPage() {
   return (
     <AuthLayout>
       <AuthCard title="Create Account" showIllustration>
-        <AuthForm type="signup" onSubmit={handleSubmit} isLoading={isLoading} />
-        <GoogleButton onClick={handleGoogleSignup} isLoading={isLoading} />
+         <div className=' space-y-3'>
+          <AuthForm type="signup" onSubmit={handleSubmit} isLoading={isLoading} />
+          <GoogleButton onClick={handleGoogleSignup} isLoading={isLoading} />
+        </div>
         <AuthFooter type="signup" />
       </AuthCard>
     </AuthLayout>
