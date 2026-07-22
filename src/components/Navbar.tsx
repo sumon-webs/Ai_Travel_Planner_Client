@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@heroui/react';
-import { ChevronDown, LayoutDashboard, Settings, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { useSession, signOut } from '@/lib/auth-client';
 
 const NAV_LINKS = [
@@ -14,17 +14,11 @@ const NAV_LINKS = [
   { label: 'About', href: '/about' },
 ];
 
-const DASHBOARD_ITEMS = [
-  { label: 'Profile', href: '/profile', icon: Settings, description: 'Account settings' },
-];
-
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session, isPending } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [dashboardOpen, setDashboardOpen] = useState(false);
-  const dashboardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -33,23 +27,11 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dashboardRef.current && !dashboardRef.current.contains(e.target as Node)) {
-        setDashboardOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  useEffect(() => {
     setMenuOpen(false);
-    setDashboardOpen(false);
   }, [pathname]);
 
   const handleSignOut = async () => {
     await signOut();
-    setDashboardOpen(false);
   };
 
   const user = session?.user;
@@ -98,76 +80,22 @@ export default function Navbar() {
             {user ? (
               /* ── Authenticated User ── */
               <>
-                {/* ── Dashboard Dropdown ── */}
-                <div className="relative" ref={dashboardRef}>
-                  <button
-                    id="navbar-dashboard-btn"
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-violet-500/40 transition-all cursor-pointer"
-                    onClick={() => setDashboardOpen((v) => !v)}
-                    aria-expanded={dashboardOpen}
-                    aria-haspopup="true"
-                  >
-                    {/* Avatar */}
-                    <div className="w-7 h-7 rounded-full border border-violet-500/60 bg-gradient-to-br from-[#4c1d95] to-[#1e1b4b] overflow-hidden flex items-center justify-center shrink-0">
-                      {user.image ? (
-                        <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-[11px] font-bold text-white">{initials}</span>
-                      )}
-                    </div>
-                    <div className="hidden md:flex items-center gap-1.5">
-                      <LayoutDashboard className="w-3.5 h-3.5 text-violet-400" />
-                      <span className="text-[14px] font-medium text-white/90">Dashboard</span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-white/50 transition-transform duration-200 ${dashboardOpen ? 'rotate-180' : ''}`} />
-                    </div>
-                  </button>
-
-                  {/* Dashboard Dropdown Panel */}
-                  {dashboardOpen && (
-                    <div
-                      className="absolute right-0 top-[calc(100%+8px)] w-64 z-50 bg-[#0f0c29]/96 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.6)] overflow-hidden animate-[slide-down_0.2s_ease-out_both]"
-                      role="menu"
-                    >
-                      {/* Profile Header */}
-                      <div className="px-4 py-3.5 border-b border-white/8">
-                        <p className="font-semibold text-[14px] text-white truncate">{user.name}</p>
-                        <p className="text-[12px] text-white/50 truncate">{user.email}</p>
-                      </div>
-
-                      {/* Dashboard Menu Items */}
-                      <div className="py-1.5">
-                        {DASHBOARD_ITEMS.map(({ label, href, icon: Icon, description }) => (
-                          <Link
-                            key={href}
-                            href={href}
-                            role="menuitem"
-                            className="flex items-start gap-3 px-4 py-2.5 hover:bg-white/6 transition-colors no-underline group"
-                            onClick={() => setDashboardOpen(false)}
-                          >
-                            <div className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-violet-500/25 transition-colors">
-                              <Icon className="w-3.5 h-3.5 text-violet-400" />
-                            </div>
-                            <div>
-                              <p className="text-[13px] font-medium text-white/90">{label}</p>
-                              <p className="text-[11px] text-white/40">{description}</p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-
-                      {/* Sign Out */}
-                      <div className="border-t border-white/8 py-1.5">
-                        <button
-                          onClick={handleSignOut}
-                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/6 transition-colors w-full text-left text-red-400 hover:text-red-300"
-                        >
-                          <LogOut className="w-3.5 h-3.5" />
-                          <span className="text-[13px] font-medium">Sign Out</span>
-                        </button>
-                      </div>
-                    </div>
+                {/* Avatar */}
+                <div className="w-8 h-8 rounded-full border border-violet-500/60 bg-gradient-to-br from-[#4c1d95] to-[#1e1b4b] overflow-hidden flex items-center justify-center shrink-0">
+                  {user.image ? (
+                    <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-[12px] font-bold text-white">{initials}</span>
                   )}
                 </div>
+                {/* Sign Out Button */}
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-white/80 hover:text-white text-sm"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden md:inline">Sign Out</span>
+                </button>
               </>
             ) : (
               /* ── Auth Buttons (Desktop) ── */
@@ -234,19 +162,6 @@ export default function Navbar() {
                     <p className="text-white font-medium text-sm">{user.name}</p>
                     <p className="text-white/50 text-xs">{user.email}</p>
                   </div>
-
-                  {/* Dashboard Items */}
-                  <p className="text-xs text-white/40 px-4 uppercase tracking-wider font-semibold mb-1">Dashboard</p>
-                  {DASHBOARD_ITEMS.map(({ label, href, icon: Icon }) => (
-                    <Link
-                      key={href}
-                      href={href}
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[15px] text-white/80 hover:bg-white/7 hover:text-white no-underline transition-colors"
-                    >
-                      <Icon className="w-4 h-4 text-violet-400 shrink-0" />
-                      {label}
-                    </Link>
-                  ))}
 
                   {/* Sign Out */}
                   <button
